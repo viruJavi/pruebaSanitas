@@ -50,5 +50,40 @@ public class RealizarSimulacionTest extends TestCase {
 
     }
 
+    @Test
+    public void testAnadirDatosFormulario() {
+
+        this.sut = new ZendeskService();
+        UsuarioAlta usuarioAlta = new UsuarioAlta();
+
+
+        StringBuilder stb = this.sut.anadirDatosForm(usuarioAlta, any(String.class));
+        assertNotNull(stb);
+
+    }
+
+    @Test
+    public void testAnadirDatosFormularioUsuarioNull() {
+
+        this.sut = new ZendeskService();
+        UsuarioAlta usuarioAlta = new UsuarioAlta();
+        usuarioAlta.setNumPoliza("987987");
+
+
+        StringBuilder stb = this.sut.anadirDatosForm(usuarioAlta, any(String.class));
+        assertNotNull(stb);
+
+    }
+
+    @Test
+    public void testGetTiposDocumento() {
+
+        this.sut = new ZendeskService();
+
+        StringBuilder stb = this.sut.anadirDatosBravo(any(String.class));
+        assertNotNull(stb);
+
+    }
+
 
 }
