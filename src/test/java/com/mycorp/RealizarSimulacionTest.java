@@ -21,9 +21,11 @@ public class RealizarSimulacionTest extends TestCase {
 
 
     private ZendeskService sut;
+    private ZendeskService sutException;
 
 
     private RestTemplate restTemplateMock;
+    private RestTemplate restTemplateExceptionMock;
 
     @Before
     public void prepare(){
@@ -37,6 +39,24 @@ public class RealizarSimulacionTest extends TestCase {
     @Test
     public void testApp() {
         assertTrue( true );
+    }
+
+
+    @Test(expected = ZendeskException.class)
+    public void testShouldZendeskException() throws Exception{
+
+
+        this.sutException = new ZendeskService();
+        this.restTemplateExceptionMock = Mockito.mock(RestTemplate.class);
+        this.sutException.setRestTemplate(this.restTemplateExceptionMock);
+
+        Mockito.when(this.restTemplateExceptionMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException());
+        Mockito.when(this.restTemplateExceptionMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException("ZendeskException"));
+        Mockito.when(this.restTemplateExceptionMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException("ZendeskException", new Throwable()));
+        Mockito.when(this.restTemplateExceptionMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException(new Throwable()));
+
+        this.restTemplateExceptionMock.getForEntity(any(String.class), any(Class.class));
+
     }
 
 
@@ -75,58 +95,6 @@ public class RealizarSimulacionTest extends TestCase {
 
     }
 
-    @Test
-    public void testAnadirDatosFormulario() {
-
-        this.sut = new ZendeskService();
-        UsuarioAlta usuarioAlta = new UsuarioAlta();
-
-
-        StringBuilder stb = this.sut.anadirDatosForm(usuarioAlta, any(String.class));
-        assertNotNull(stb);
-
-    }
-
-    @Test
-    public void testAnadirDatosFormularioUsuarioNull() {
-
-        this.sut = new ZendeskService();
-        UsuarioAlta usuarioAlta = new UsuarioAlta();
-        usuarioAlta.setNumPoliza("987987");
-
-
-        StringBuilder stb = this.sut.anadirDatosForm(usuarioAlta, any(String.class));
-        assertNotNull(stb);
-
-    }
-
-    @Test
-    public void testAnadirDatosBravo() {
-
-        this.sut = new ZendeskService();
-
-        StringBuilder stb = this.sut.anadirDatosBravo(any(String.class));
-        assertNotNull(stb);
-
-    }
-
-
-    @Test(expected = ZendeskException.class)
-    public void testShouldZendeskException() throws Exception{
-
-
-        this.sut = new ZendeskService();
-        this.restTemplateMock = Mockito.mock(RestTemplate.class);
-        this.sut.setRestTemplate(this.restTemplateMock);
-
-        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException());
-        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException("ZendeskException"));
-        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException("ZendeskException", new Throwable()));
-        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException(new Throwable()));
-
-        this.restTemplateMock.getForEntity(any(String.class), any(Class.class));
-
-    }
 
 
 }
