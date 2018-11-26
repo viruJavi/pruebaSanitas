@@ -37,7 +37,7 @@ public class ZendeskService {
     private static final Logger LOG = LoggerFactory.getLogger( ZendeskService.class );
 
     private static final String ESCAPED_LINE_SEPARATOR = "\\n";
-    private static final String ESCAPE_ER = "\\";
+    private static final String ESCAPE_ER = "\\n";
     private static final String HTML_BR = "<br/>";
     @Value("#{envPC['zendesk.ticket']}")
     public String PETICION_ZENDESK= "";
@@ -80,6 +80,14 @@ public class ZendeskService {
     @Qualifier( "emailService" )
     MensajeriaService emailService;
 
+    private final String CONST_POTENCIAL = "POTENCIAL";
+    private final String CONST_REAL = "REAL";
+    private final String CONST_PROSPECTO = "PROSPECTO";
+
+    private final int POTENCIAL = 1;
+    private final int REAL = 2;
+    private final int PROSPECTO = 3;
+
     /**
      * Crea un ticket en Zendesk. Si se ha informado el nÂº de tarjeta, obtiene los datos asociados a dicha tarjeta de un servicio externo.
      * @param usuarioAlta
@@ -91,7 +99,6 @@ public class ZendeskService {
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
         StringBuilder datosUsuario = new StringBuilder();
-        StringBuilder datosBravo = new StringBuilder();
 
         String idCliente = null;
 
@@ -110,7 +117,7 @@ public class ZendeskService {
         datosUsuario.append("NÂº mÃ³vil: ").append(usuarioAlta.getNumeroTelefono()).append(ESCAPED_LINE_SEPARATOR);
         datosUsuario.append("User Agent: ").append(userAgent).append(ESCAPED_LINE_SEPARATOR);
 
-        datosBravo.append(ESCAPED_LINE_SEPARATOR + "Datos recuperados de BRAVO:" + ESCAPED_LINE_SEPARATOR + ESCAPED_LINE_SEPARATOR);
+
         StringBuilder datosServicio = new StringBuilder();
         // Obtiene el idCliente de la tarjeta
         if(StringUtils.isNotBlank(usuarioAlta.getNumTarjeta())){
@@ -131,10 +138,7 @@ public class ZendeskService {
         else if(StringUtils.isNotBlank(usuarioAlta.getNumPoliza())){
             try
             {
-                Poliza poliza = new Poliza();
-                poliza.setNumPoliza(Integer.valueOf(usuarioAlta.getNumPoliza()));
-                poliza.setNumColectivo(Integer.valueOf(usuarioAlta.getNumDocAcreditativo()));
-                poliza.setCompania(1);
+                Poliza poliza = setDatosPoliza(Integer.valueOf(usuarioAlta.getNumPoliza()), Integer.valueOf(usuarioAlta.getNumDocAcreditativo()));
 
                 PolizaBasico polizaBasicoConsulta = new PolizaBasicoFromPolizaBuilder().withPoliza( poliza ).build();
 
@@ -154,50 +158,8 @@ public class ZendeskService {
             }
         }
 
-        try
-        {
-            // Obtenemos los datos del cliente
-            DatosCliente cliente = restTemplate.getForObject("http://localhost:8080/test-endpoint", DatosCliente.class, idCliente);
+        StringBuilder datosBravo = anadirDatosBravo(idCliente);
 
-            datosBravo.append("TelÃ©fono: ").append(cliente.getGenTGrupoTmk()).append(ESCAPED_LINE_SEPARATOR);
-
-
-            datosBravo.append("Feha de nacimiento: ").append(formatter.format(formatter.parse(cliente.getFechaNacimiento()))).append(ESCAPED_LINE_SEPARATOR);
-
-            List< ValueCode > tiposDocumentos = getTiposDocumentosRegistro();
-            for(int i = 0; i < tiposDocumentos.size();i++)
-            {
-                if(tiposDocumentos.get(i).getCode().equals(cliente.getGenCTipoDocumento().toString()))
-                {
-                    datosBravo.append("Tipo de documento: ").append(tiposDocumentos.get(i).getValue()).append(ESCAPED_LINE_SEPARATOR);
-                }
-            }
-            datosBravo.append("NÃºmero documento: ").append(cliente.getNumeroDocAcred()).append(ESCAPED_LINE_SEPARATOR);
-
-            datosBravo.append("Tipo cliente: ");
-            switch (cliente.getGenTTipoCliente()) {
-            case 1:
-                datosBravo.append("POTENCIAL").append(ESCAPED_LINE_SEPARATOR);
-                break;
-            case 2:
-                datosBravo.append("REAL").append(ESCAPED_LINE_SEPARATOR);
-                break;
-            case 3:
-                datosBravo.append("PROSPECTO").append(ESCAPED_LINE_SEPARATOR);
-                break;
-            }
-
-            datosBravo.append("ID estado del cliente: ").append(cliente.getGenTStatus()).append(ESCAPED_LINE_SEPARATOR);
-
-            datosBravo.append("ID motivo de alta cliente: ").append(cliente.getIdMotivoAlta()).append(ESCAPED_LINE_SEPARATOR);
-
-            datosBravo.append("Registrado: ").append((cliente.getfInactivoWeb() == null ? "SÃ­" : "No")).append(ESCAPED_LINE_SEPARATOR + ESCAPED_LINE_SEPARATOR);
-
-
-        }catch(Exception e)
-        {
-            LOG.error("Error al obtener los datos en BRAVO del cliente", e);
-        }
 
         String ticket = String.format(PETICION_ZENDESK, clientName.toString(), usuarioAlta.getEmail(), datosUsuario.toString()+datosBravo.toString()+
                 parseJsonBravo(datosServicio));
@@ -228,6 +190,71 @@ public class ZendeskService {
         datosUsuario.append(datosBravo);
 
         return datosUsuario.toString();
+    }
+
+    private StringBuilder anadirDatosBravo(String idCliente){
+
+        StringBuilder datosBravo = new StringBuilder();
+
+        datosBravo.append(ESCAPED_LINE_SEPARATOR + "Datos recuperados de BRAVO:" + ESCAPED_LINE_SEPARATOR + ESCAPED_LINE_SEPARATOR);
+
+        try
+        {
+            // Obtenemos los datos del cliente
+            DatosCliente cliente = restTemplate.getForObject("http://localhost:8080/test-endpoint", DatosCliente.class, idCliente);
+
+            datosBravo.append("TelÃ©fono: ").append(cliente.getGenTGrupoTmk()).append(ESCAPED_LINE_SEPARATOR);
+
+
+            datosBravo.append("Feha de nacimiento: ").append(formatter.format(formatter.parse(cliente.getFechaNacimiento()))).append(ESCAPED_LINE_SEPARATOR);
+
+            List< ValueCode > tiposDocumentos = getTiposDocumentosRegistro();
+            for(int i = 0; i < tiposDocumentos.size();i++)
+            {
+                if(tiposDocumentos.get(i).getCode().equals(cliente.getGenCTipoDocumento().toString()))
+                {
+                    datosBravo.append("Tipo de documento: ").append(tiposDocumentos.get(i).getValue()).append(ESCAPED_LINE_SEPARATOR);
+                }
+            }
+            datosBravo.append("NÃºmero documento: ").append(cliente.getNumeroDocAcred()).append(ESCAPED_LINE_SEPARATOR);
+
+            datosBravo.append("Tipo cliente: ");
+            switch (cliente.getGenTTipoCliente()) {
+                case POTENCIAL:
+                    datosBravo.append(CONST_POTENCIAL).append(ESCAPED_LINE_SEPARATOR);
+                    break;
+                case REAL:
+                    datosBravo.append(CONST_REAL).append(ESCAPED_LINE_SEPARATOR);
+                    break;
+                case PROSPECTO:
+                    datosBravo.append(CONST_PROSPECTO).append(ESCAPED_LINE_SEPARATOR);
+                    break;
+            }
+
+            datosBravo.append("ID estado del cliente: ").append(cliente.getGenTStatus()).append(ESCAPED_LINE_SEPARATOR);
+
+            datosBravo.append("ID motivo de alta cliente: ").append(cliente.getIdMotivoAlta()).append(ESCAPED_LINE_SEPARATOR);
+
+            datosBravo.append("Registrado: ").append((cliente.getfInactivoWeb() == null ? "SÃ­" : "No")).append(ESCAPED_LINE_SEPARATOR + ESCAPED_LINE_SEPARATOR);
+
+        }catch(Exception e)
+        {
+            LOG.error("Error al obtener los datos en BRAVO del cliente", e);
+        }
+
+        return datosBravo;
+
+
+    }
+
+    private Poliza setDatosPoliza(Integer numPoliza, Integer numColectivo){
+
+        Poliza poliza = new Poliza();
+        poliza.setNumPoliza(numPoliza);
+        poliza.setNumColectivo(numColectivo);
+        poliza.setCompania(1);
+
+        return poliza;
     }
 
     public List< ValueCode > getTiposDocumentosRegistro() {
