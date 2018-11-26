@@ -41,6 +41,31 @@ public class RealizarSimulacionTest extends TestCase {
 
 
     @Test
+    public void testAltaTicket(){
+
+        this.sut = new ZendeskService();
+        this.restTemplateMock = Mockito.mock(RestTemplate.class);
+        this.sut.setRestTemplate(this.restTemplateMock);
+
+        UsuarioAlta usuarioAlta = new UsuarioAlta();
+        usuarioAlta.setNumTarjeta("12312312");
+        usuarioAlta.setNumPoliza("2854");
+        String userAgent = "TEST";
+
+        ResponseEntity responseMock = Mockito.mock(ResponseEntity.class);
+
+        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenReturn( responseMock);
+        Mockito.when(responseMock.getStatusCode()).thenReturn( HttpStatus.OK);
+        Mockito.when(responseMock.getBody()).thenReturn( "Algo");
+
+        String response = this.sut.altaTicketZendesk(usuarioAlta, userAgent);
+
+        assertNotNull(response);
+
+    }
+
+
+    @Test
     public void testDatosPoliza() {
 
         this.sut = new ZendeskService();
@@ -76,12 +101,30 @@ public class RealizarSimulacionTest extends TestCase {
     }
 
     @Test
-    public void testGetTiposDocumento() {
+    public void testAnadirDatosBravo() {
 
         this.sut = new ZendeskService();
 
         StringBuilder stb = this.sut.anadirDatosBravo(any(String.class));
         assertNotNull(stb);
+
+    }
+
+
+    @Test(expected = ZendeskException.class)
+    public void testShouldZendeskException() throws Exception{
+
+
+        this.sut = new ZendeskService();
+        this.restTemplateMock = Mockito.mock(RestTemplate.class);
+        this.sut.setRestTemplate(this.restTemplateMock);
+
+        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException());
+        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException("ZendeskException"));
+        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException("ZendeskException", new Throwable()));
+        Mockito.when(this.restTemplateMock.getForEntity(any(String.class), any(Class.class))).thenThrow(new ZendeskException(new Throwable()));
+
+        this.restTemplateMock.getForEntity(any(String.class), any(Class.class));
 
     }
 
