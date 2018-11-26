@@ -59,7 +59,7 @@ public class ZendeskService {
     public String CLIENTE_GETDATOS = "";
 
     @Value("#{envPC['zendesk.error.mail.funcionalidad']}")
-    public String ZENDESK_ERROR_MAIL_FUNCIONALIDAD = "";
+    public String ZENDESK_ERROR_MAIL_FUNCIONALIDAD = "1";
 
     @Value("#{envPC['zendesk.error.destinatario']}")
     public String ZENDESK_ERROR_DESTINATARIO = "";
@@ -182,7 +182,7 @@ public class ZendeskService {
         return datosUsuario.toString();
     }
 
-    private StringBuilder anadirDatosBravo(String idCliente){
+    public StringBuilder anadirDatosBravo(String idCliente){
 
         StringBuilder datosBravo = new StringBuilder();
 
@@ -237,7 +237,7 @@ public class ZendeskService {
 
     }
 
-    private StringBuilder anadirDatosForm(UsuarioAlta usuarioAlta, String userAgent){
+    public StringBuilder anadirDatosForm(UsuarioAlta usuarioAlta, String userAgent){
 
         StringBuilder datosUsuario = new StringBuilder();
 
@@ -256,7 +256,7 @@ public class ZendeskService {
 
     }
 
-    private Poliza setDatosPoliza(Integer numPoliza, Integer numColectivo){
+    public Poliza setDatosPoliza(Integer numPoliza, Integer numColectivo){
 
         Poliza poliza = new Poliza();
         poliza.setNumPoliza(numPoliza);
@@ -268,6 +268,10 @@ public class ZendeskService {
 
     public List< ValueCode > getTiposDocumentosRegistro() {
         return Arrays.asList( new ValueCode(), new ValueCode() ); // simulacion servicio externo
+    }
+
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     /**
