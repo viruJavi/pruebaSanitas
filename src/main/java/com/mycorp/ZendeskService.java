@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mycorp.propiedades.ZendeskProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,24 +99,13 @@ public class ZendeskService {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-        StringBuilder datosUsuario = new StringBuilder();
-
         String idCliente = null;
 
         StringBuilder clientName = new StringBuilder();
 
 
         // AÃ±ade los datos del formulario
-        if(StringUtils.isNotBlank(usuarioAlta.getNumPoliza())){
-            datosUsuario.append("NÂº de poliza/colectivo: ").append(usuarioAlta.getNumPoliza()).append("/").append(usuarioAlta.getNumDocAcreditativo()).append(ESCAPED_LINE_SEPARATOR);
-        }else{
-            datosUsuario.append("NÂº tarjeta Sanitas o Identificador: ").append(usuarioAlta.getNumTarjeta()).append(ESCAPED_LINE_SEPARATOR);
-        }
-        datosUsuario.append("Tipo documento: ").append(usuarioAlta.getTipoDocAcreditativo()).append(ESCAPED_LINE_SEPARATOR);
-        datosUsuario.append("NÂº documento: ").append(usuarioAlta.getNumDocAcreditativo()).append(ESCAPED_LINE_SEPARATOR);
-        datosUsuario.append("Email personal: ").append(usuarioAlta.getEmail()).append(ESCAPED_LINE_SEPARATOR);
-        datosUsuario.append("NÂº mÃ³vil: ").append(usuarioAlta.getNumeroTelefono()).append(ESCAPED_LINE_SEPARATOR);
-        datosUsuario.append("User Agent: ").append(userAgent).append(ESCAPED_LINE_SEPARATOR);
+        StringBuilder datosUsuario = anadirDatosForm(usuarioAlta, userAgent);
 
 
         StringBuilder datosServicio = new StringBuilder();
@@ -244,6 +234,25 @@ public class ZendeskService {
 
         return datosBravo;
 
+
+    }
+
+    private StringBuilder anadirDatosForm(UsuarioAlta usuarioAlta, String userAgent){
+
+        StringBuilder datosUsuario = new StringBuilder();
+
+        if(StringUtils.isNotBlank(usuarioAlta.getNumPoliza())){
+            datosUsuario.append(ZendeskProperties.getnPolizas()).append(usuarioAlta.getNumPoliza()).append("/").append(usuarioAlta.getNumDocAcreditativo()).append(ESCAPED_LINE_SEPARATOR);
+        }else{
+            datosUsuario.append(ZendeskProperties.getnTarj()).append(usuarioAlta.getNumTarjeta()).append(ESCAPED_LINE_SEPARATOR);
+        }
+        datosUsuario.append(ZendeskProperties.getTipoDoc()).append(usuarioAlta.getTipoDocAcreditativo()).append(ESCAPED_LINE_SEPARATOR);
+        datosUsuario.append(ZendeskProperties.getnDoc()).append(usuarioAlta.getNumDocAcreditativo()).append(ESCAPED_LINE_SEPARATOR);
+        datosUsuario.append(ZendeskProperties.getEmail()).append(usuarioAlta.getEmail()).append(ESCAPED_LINE_SEPARATOR);
+        datosUsuario.append(ZendeskProperties.getnMov()).append(usuarioAlta.getNumeroTelefono()).append(ESCAPED_LINE_SEPARATOR);
+        datosUsuario.append(ZendeskProperties.getUser()).append(userAgent).append(ESCAPED_LINE_SEPARATOR);
+
+        return datosUsuario;
 
     }
 
